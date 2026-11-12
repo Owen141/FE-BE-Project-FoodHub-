@@ -133,5 +133,7 @@ func auth(db *pgxpool.Pool, roles ...string) gin.HandlerFunc {
 		c.Set("uid", id)
 		c.Set("username", username)
 		c.Set("role", role)
+		c.SetSameSite(http.SameSiteNoneMode)
+   		c.SetCookie("session", token, 60*60*24*7, "/", "", true, true)
 	}
 }
