@@ -89,6 +89,7 @@ func main() {
 	defer db.Close()
 
 	r := gin.Default()
+	r.Use(corsMiddleware())
 	api := r.Group("/api")
 	api.GET("/menu", func(c *gin.Context) {
 		jsonQuery(c, db, `SELECT coalesce(json_agg(m ORDER BY m.id), '[]')::text FROM menu_items m`)
@@ -208,4 +209,28 @@ func fail(c *gin.Context, code int, msg string) {
 func serverError(c *gin.Context, err error) {
 	log.Println(err)
 	fail(c, http.StatusInternalServerError, "เกิดข้อผิดพลาดในระบบ")
+}
+
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		origin := c.GetHeader("Origin")
+		allowed := origin == "http://localhost:5173" ||
+			origin == "http://127.0.0.1:5173" ||
+			origin == "https://fe-be-project-food-hub.vercel.app" ||
+			(strings.HasPrefix(origin, "https://fe-be-project-food-hub-") &&
+				strings.HasSuffix(origin, "-owen141s-projects.vercel.app"))
+
+		if allowed {
+			c.Header("Access-Control-Allow-Origin", origin)
+			c.Header("Access-Control-Allow-Credentials", "true")
+			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+			c.Header("Vary", "Origin")
+		}
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+		c.Next()
+	}
 }
