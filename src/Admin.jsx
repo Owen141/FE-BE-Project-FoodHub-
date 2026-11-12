@@ -1,9 +1,10 @@
 
 import { useEffect, useState } from 'react'
-import { api, baht, formatTime, itemText, statusLabel } from './api.js'
+import { api, baht, formatTime, itemText, menuCategories, statusLabel } from './api.js'
 const emptyForm = {
   name: '',
   price: '',
+  category: 'savory',
   emoji: '🍽️',
   image: '',
   options: [],
@@ -116,6 +117,7 @@ export default function Admin({ activePage, setActivePage }) {
     setForm({
       name: item.name,
       price: String(item.price),
+      category: item.category || 'savory',
       emoji: item.emoji || '🍽️',
       image: item.image || '',
       options: (item.options || []).map(group => ({
@@ -222,6 +224,7 @@ export default function Admin({ activePage, setActivePage }) {
     const body = {
       name,
       price,
+      category: form.category,
       emoji,
       image: form.image.trim(),
       options,
@@ -265,6 +268,7 @@ export default function Admin({ activePage, setActivePage }) {
         body: {
           name: item.name,
           price: item.price,
+          category: item.category || 'savory',
           emoji: item.emoji,
           image: item.image || '',
           options: item.options || [],
@@ -392,6 +396,20 @@ export default function Admin({ activePage, setActivePage }) {
             </label>
 
             <label>
+              หมวดหมู่
+              <select
+                value={form.category}
+                onChange={e => changeField('category', e.target.value)}
+              >
+                {menuCategories.map(category => (
+                  <option key={category.value} value={category.value}>
+                    {category.emoji} {category.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
               ที่อยู่รูปภาพ
               <input
                 value={form.image}
@@ -509,6 +527,9 @@ export default function Admin({ activePage, setActivePage }) {
                   <div>
                     <strong>{item.name}</strong>
                     <p>{baht(item.price)}</p>
+                    <span className="admin-category">
+                      {menuCategories.find(category => category.value === (item.category || 'savory'))?.label || 'ของคาว'}
+                    </span>
                     <span className={item.is_available ? 'admin-status available' : 'admin-status unavailable'}>
                       {item.is_available ? 'กำลังขาย' : 'ปิดการขาย'}
                     </span>
@@ -694,4 +715,3 @@ export default function Admin({ activePage, setActivePage }) {
   )
   
 }
-

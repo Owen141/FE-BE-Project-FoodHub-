@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, baht, formatTime, itemText, statusLabel } from './api.js'
+import { api, baht, formatTime, itemText, menuCategories, statusLabel } from './api.js'
 
 const steps = ['pending', 'cooking', 'ready', 'done']
 
@@ -24,6 +24,7 @@ export default function Customer() {
   const [msg, setMsg] = useState(null)
   const [busy, setBusy] = useState(false)
   const [activeTab, setActiveTab] = useState('menu')
+  const [activeCategory, setActiveCategory] = useState('all')
 
   const loadOrders = () => api('/my/orders').then(setOrders)
   useEffect(() => {
@@ -55,6 +56,9 @@ export default function Customer() {
   const total = lines.reduce((s, [, l]) => s + l.menu.price * l.qty, 0)
   const count = lines.reduce((n, [, l]) => n + l.qty, 0)
   const inCart = (id) => lines.reduce((n, [, l]) => n + (l.menu.id === id ? l.qty : 0), 0)
+  const visibleMenu = menu.filter((item) =>
+    activeCategory === 'all' || (item.category || 'savory') === activeCategory
+  )
 
   async function submit(e) {
     e.preventDefault()
@@ -101,10 +105,30 @@ export default function Customer() {
         <p className="muted">ปรับความเผ็ด-หวานได้ตามใจ ก่อนกดเพิ่มลงตะกร้า</p>
       </div>
 
+      <nav className="category-navigation" aria-label="หมวดหมู่เมนู">
+        <button
+          type="button"
+          className={activeCategory === 'all' ? 'category-tab active' : 'category-tab'}
+          onClick={() => setActiveCategory('all')}
+        >
+          🍽️ ทั้งหมด
+        </button>
+        {menuCategories.map(category => (
+          <button
+            key={category.value}
+            type="button"
+            className={activeCategory === category.value ? 'category-tab active' : 'category-tab'}
+            onClick={() => setActiveCategory(category.value)}
+          >
+            {category.emoji} {category.label}
+          </button>
+        ))}
+      </nav>
+
       <div className="shop">
         <section aria-labelledby="menu-h">
           <ul className="menu">
-            {menu.map((m) => {
+            {visibleMenu.map((m) => {
               const n = inCart(m.id)
               return (
                 <li key={m.id} className="card">
@@ -140,6 +164,12 @@ export default function Customer() {
               )
             })}
           </ul>
+          {visibleMenu.length === 0 && (
+            <div className="panel empty">
+              <span aria-hidden="true">🍽️</span>
+              <p>ยังไม่มีเมนูในหมวดหมู่นี้</p>
+            </div>
+          )}
         </section>
 
         <aside id="cart" aria-labelledby="cart-h">

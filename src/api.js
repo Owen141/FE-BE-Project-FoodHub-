@@ -1,5 +1,11 @@
 const API_URL = import.meta.env.VITE_API_URL || ''
 
+export const menuCategories = [
+  { value: 'savory', label: 'ของคาว', emoji: '🍛' },
+  { value: 'dessert', label: 'ของหวาน', emoji: '🍰' },
+  { value: 'drink', label: 'เครื่องดื่ม', emoji: '🥤' },
+]
+
 export async function api(path, { method = 'GET', body } = {}) {
   const res = await fetch(API_URL + '/api' + path, {
     method,

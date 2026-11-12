@@ -276,6 +276,7 @@ select { font: inherit; height: 34px; padding: 0 8px; color: var(--text); backgr
 }
 
 .admin-form-grid input,
+.admin-form-grid select,
 .admin-option-group input {
   width: 100%;
   min-width: 0;
@@ -288,6 +289,7 @@ select { font: inherit; height: 34px; padding: 0 8px; color: var(--text); backgr
 }
 
 .admin-form-grid input:focus,
+.admin-form-grid select:focus,
 .admin-option-group input:focus {
   outline: 2px solid var(--ring);
   outline-offset: 1px;
@@ -391,6 +393,17 @@ select { font: inherit; height: 34px; padding: 0 8px; color: var(--text); backgr
   align-items: center;
   gap: 14px;
   min-width: 0;
+}
+
+.admin-category {
+  display: inline-block;
+  margin: 0 6px 6px 0;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .admin-menu-emoji {
@@ -755,6 +768,35 @@ select { font: inherit; height: 34px; padding: 0 8px; color: var(--text); backgr
   border-color: var(--accent);
 }
 
+.category-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.category-navigation .category-tab {
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.category-navigation .category-tab.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.category-navigation .category-tab:not(.active):hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
 @media (max-width: 560px) {
   .customer-navigation {
     gap: 8px;
@@ -766,7 +808,11 @@ select { font: inherit; height: 34px; padding: 0 8px; color: var(--text); backgr
     padding: 8px;
     font-size: 13px;
   }
-}
 
+  .category-navigation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 
 
