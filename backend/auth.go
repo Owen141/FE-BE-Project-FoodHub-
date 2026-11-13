@@ -133,7 +133,9 @@ func auth(db *pgxpool.Pool, roles ...string) gin.HandlerFunc {
 		c.Set("uid", id)
 		c.Set("username", username)
 		c.Set("role", role)
-		c.SetSameSite(http.SameSiteNoneMode)
-   		c.SetCookie("session", token, 60*60*24*7, "/", "", true, true)
 	}
+}
+func setCookie(c *gin.Context, token string, maxAge int) {
+	c.SetSameSite(http.SameSiteNoneMode) // ให้ส่ง cookie ข้ามโดเมน Vercel -> Render ได้
+	c.SetCookie(sessionCookie, token, maxAge, "/", "", true, true) // Secure=true ต้องใช้คู่กับ SameSite=None
 }
