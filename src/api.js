@@ -6,6 +6,14 @@ export const menuCategories = [
   { value: 'drink', label: 'เครื่องดื่ม', emoji: '🥤' },
 ]
 
+export function menuCategoryForItem(item) {
+  const name = item.name?.trim()
+  const image = item.image || ''
+  if (name === 'ชาไทยเย็น' || image.includes('cha-thai')) return 'drink'
+  if (name === 'ข้าวเหนียวมะม่วง' || image.includes('khao-niao-mamuang')) return 'dessert'
+  return item.category || 'savory'
+}
+
 export async function api(path, { method = 'GET', body } = {}) {
   const res = await fetch(API_URL + '/api' + path, {
     method,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, baht, formatTime, itemText, menuCategories, statusLabel } from './api.js'
+import { api, baht, formatTime, itemText, menuCategories, menuCategoryForItem, statusLabel } from './api.js'
 
 const steps = ['pending', 'cooking', 'ready', 'done']
 
@@ -57,7 +57,7 @@ export default function Customer() {
   const count = lines.reduce((n, [, l]) => n + l.qty, 0)
   const inCart = (id) => lines.reduce((n, [, l]) => n + (l.menu.id === id ? l.qty : 0), 0)
   const visibleMenu = menu.filter((item) =>
-    activeCategory === 'all' || (item.category || 'savory') === activeCategory
+    activeCategory === 'all' || menuCategoryForItem(item) === activeCategory
   )
 
   async function submit(e) {
