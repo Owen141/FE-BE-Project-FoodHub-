@@ -100,6 +100,7 @@ func main() {
 	api.POST("/logout", func(c *gin.Context) { logout(c, db) })
 	api.GET("/me", auth(db), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"username": c.GetString("username"), "role": c.GetString("role")})
+	api.PATCH("/me/password", auth(db), func(c *gin.Context) { changePassword(c, db) })
 	})
 
 	customer := api.Group("", auth(db, "customer"))

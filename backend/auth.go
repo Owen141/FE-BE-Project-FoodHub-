@@ -133,3 +133,30 @@ func setCookie(c *gin.Context, token string, maxAge int) {
 	c.SetSameSite(http.SameSiteNoneMode) // ให้ส่ง cookie ข้ามโดเมน Vercel -> Render ได้
 	c.SetCookie(sessionCookie, token, maxAge, "/", "", true, true) // Secure=true ต้องใช้คู่กับ SameSite=None
 }
+
+func changePassword(c *gin.Context, db *pgxpool.Pool) {
+	var body struct {
+		OldPassword string `json:"old_password"`
+		NewPassword string `json:"new_password"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		fail(c, http.StatusBadRequest, "ข้อมูลไม่ถูกต้อง")
+		return
+	}
+	if len(body.NewPassword) < 6 || len(body.NewPassword) > 72 {
+		fail(c, http.StatusBadRequest, "รหัสผ่านใหม่ต้องยาว 6-72 ตัวอักษร")
+		return
+	}
+	tag, err := db.Exec(c, `UPDATE users SET password_hash = crypt($1, gen_salt('bf', 10))
+		WHERE id = $2 AND password_hash = crypt($3, password_hash)`,
+		body.NewPassword, c.GetInt("uid"), body.OldPassword)
+	if err != nil {
+		serverError(c, err)
+		return
+	}
+	if tag.RowsAffected() == 0 {
+		fail(c, http.StatusBadRequest, "รหัสผ่านเดิมไม่ถูกต้อง") // ห้ามใช้ 401 เพราะ api.js จะเตะผู้ใช้ออกจากระบบ
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
