@@ -103,12 +103,6 @@ func logout(c *gin.Context, db *pgxpool.Pool) {
 	c.Status(http.StatusNoContent)
 }
 
-// shortcut: Secure=false so the cookie works on plain http://localhost, set true once served over HTTPS.
-func setCookie(c *gin.Context, token string, maxAge int) {
-	c.SetSameSite(http.SameSiteLaxMode) // cross-site POSTs don't carry the cookie (CSRF)
-	c.SetCookie(sessionCookie, token, maxAge, "/", "", false, true)
-}
-
 // auth requires a valid session; when roles are given the user must have one of them.
 func auth(db *pgxpool.Pool, roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
