@@ -247,3 +247,102 @@ func corsMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+const summarySQL = `SELECT json_build_object(
+  'order_count', (SELECT count(*) FROM orders),
+  'total_sales', (SELECT coalesce(sum(total), 0) FROM orders WHERE status <> 'cancelled'),
+  'member_count', (SELECT count(*) FROM users WHERE role = 'customer'))::text`
+
+type menuReq struct {
+	Name        string        `json:"name"`
+	Price       int           `json:"price"`
+	Category    string        `json:"category"`
+	Emoji       string        `json:"emoji"`
+	Image       string        `json:"image"`
+	Options     []optionGroup `json:"options"`
+	IsAvailable *bool         `json:"is_available"`
+}
+
+func (m *menuReq) validate() error {
+	m.Name = strings.TrimSpace(m.Name)
+	if n := len([]rune(m.Name)); n == 0 || n > 100 {
+		return errors.New("ชื่อเมนูไม่ถูกต้อง")
+	}
+	if m.Price < 0 || m.Price > 100000 {
+		return errors.New("ราคาไม่ถูกต้อง")
+	}
+	if !slices.Contains([]string{"savory", "dessert", "drink"}, m.Category) {
+		return errors.New("หมวดหมู่ไม่ถูกต้อง")
+	}
+	if m.Options == nil {
+		m.Options = []optionGroup{} // ห้ามเป็น nil ไม่งั้นจะส่ง null เข้า DB
+	}
+	return nil
+}
+
+func createMenu(c *gin.Context, db *pgxpool.Pool) {
+	var m menuReq
+	if c.ShouldBindJSON(&m) != nil {
+		fail(c, http.StatusBadRequest, "ข้อมูลไม่ถูกต้อง")
+		return
+	}
+	if err := m.validate(); err != nil {
+		fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	var id int
+	if err := db.QueryRow(c, `INSERT INTO menu_items (name, price, category, emoji, image, options)
+		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+		m.Name, m.Price, m.Category, m.Emoji, m.Image, m.Options).Scan(&id); err != nil {
+		serverError(c, err)
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"id": id})
+}
+
+func updateMenu(c *gin.Context, db *pgxpool.Pool) {
+	id, err := strconv.Atoi(c.Param("id"))
+	var m menuReq
+	if err != nil || c.ShouldBindJSON(&m) != nil {
+		fail(c, http.StatusBadRequest, "ข้อมูลไม่ถูกต้อง")
+		return
+	}
+	if err := m.validate(); err != nil {
+		fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	tag, err := db.Exec(c, `UPDATE menu_items SET name=$1, price=$2, category=$3, emoji=$4, image=$5,
+		options=$6, is_available=coalesce($7, is_available) WHERE id=$8`,
+		m.Name, m.Price, m.Category, m.Emoji, m.Image, m.Options, m.IsAvailable, id)
+	if err != nil {
+		serverError(c, err)
+		return
+	}
+	if tag.RowsAffected() == 0 {
+		fail(c, http.StatusNotFound, "ไม่พบเมนู")
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+func deleteMenu(c *gin.Context, db *pgxpool.Pool) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		fail(c, http.StatusBadRequest, "ข้อมูลไม่ถูกต้อง")
+		return
+	}
+	tag, err := db.Exec(c, `DELETE FROM menu_items WHERE id = $1`, id)
+	if err != nil {
+		if strings.Contains(err.Error(), "23503") { // foreign key: เมนูอยู่ในประวัติออเดอร์
+			fail(c, http.StatusConflict, "เมนูนี้อยู่ในประวัติออเดอร์ ให้ปิดการขายแทน")
+			return
+		}
+		serverError(c, err)
+		return
+	}
+	if tag.RowsAffected() == 0 {
+		fail(c, http.StatusNotFound, "ไม่พบเมนู")
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
