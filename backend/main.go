@@ -111,6 +111,17 @@ func main() {
 	staff.GET("/orders", func(c *gin.Context) { jsonQuery(c, db, ordersSQL, nil) })
 	staff.PATCH("/orders/:id", func(c *gin.Context) { setStatus(c, db) })
 
+	admin := api.Group("/admin", auth(db, "admin"))
+	admin.GET("/summary", func(c *gin.Context) { jsonQuery(c, db, summarySQL) })
+	admin.GET("/orders", func(c *gin.Context) { jsonQuery(c, db, ordersSQL, nil) })
+	admin.PATCH("/orders/:id", func(c *gin.Context) { setStatus(c, db) })
+	admin.GET("/menu", func(c *gin.Context) {
+		jsonQuery(c, db, `SELECT coalesce(json_agg(m ORDER BY m.id), '[]')::text FROM menu_items m`)
+	})
+	admin.POST("/menu", func(c *gin.Context) { createMenu(c, db) })
+	admin.PATCH("/menu/:id", func(c *gin.Context) { updateMenu(c, db) })
+	admin.DELETE("/menu/:id", func(c *gin.Context) { deleteMenu(c, db) })
+
 	log.Fatal(r.Run(":8080"))
 }
 
