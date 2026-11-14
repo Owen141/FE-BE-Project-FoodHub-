@@ -12,12 +12,15 @@ const statIcon = { pending: '⏳', cooking: '🔥', ready: '✅' }
 export default function Staff() {
   const [orders, setOrders] = useState([])
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
   const load = () =>
     api('/staff/orders').then(
       (o) => { setOrders(o); setError('') },
       (e) => setError(e.message),
     )
+    .finally(() => setLoading(false))
+
   useEffect(() => {
     load()
     const t = setInterval(load, 5000) // new orders appear without refreshing
@@ -48,13 +51,14 @@ export default function Staff() {
         ))}
       </ul>
       {error && <p role="alert" className="error">{error}</p>}
+      {loading && <p className="muted">กำลังโหลดออเดอร์...</p>}
 
       <section aria-labelledby="active-h">
         <div className="section-head">
           <h2 id="active-h">ออเดอร์ที่ต้องทำ</h2>
           <span className="pill">{active.length}</span>
         </div>
-        {active.length === 0 && (
+        {!loading && active.length === 0 && (
           <div className="panel empty">
             <span aria-hidden="true">🎉</span>
             <p>ไม่มีออเดอร์ค้าง</p>
@@ -97,7 +101,7 @@ export default function Staff() {
         <div className="section-head">
           <h2 id="history-h">ประวัติออเดอร์</h2>
         </div>
-        {history.length === 0 && <p className="muted">ยังไม่มีประวัติ</p>}
+        {!loading && history.length === 0 && <p className="muted">ยังไม่มีประวัติ</p>}
         <div className="history">
           {history.map((o) => (
             <article key={o.id} className="panel order row">
