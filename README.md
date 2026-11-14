@@ -5,7 +5,8 @@ Term Project วิชา Frontend/Backend — React + Fetch API + Go
 ## ลิงก์ระบบ
 - เว็บไซต์: https://fe-be-project-food-hub.vercel.app
 - API: https://fe-be-project-foodhub.onrender.com
-- หมายเหตุ: Backend อยู่บน Render แบบฟรี เปิดครั้งแรกอาจรอ 30-60 วินาที
+  - https://fe-be-project-foodhub.onrender.com/api/menu (ดูรายการเมนูแบบ JSON)
+- หมายเหตุ: หน้าแรกของ API จะขึ้น 404 เป็นเรื่องปกติ เพราะไม่มีหน้าเว็บ และ Backend อยู่บน Render แบบฟรี เปิดครั้งแรกอาจรอ 30-60 วินาที
 
 ## บัญชีทดสอบ
 | บทบาท | Username | Password |
